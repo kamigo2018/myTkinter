@@ -22,5 +22,5 @@ class Application(tk.Frame):
 
 root = tk.Tk()
 app = Application(master=root)
-root.geometry("600x400")
+root.geometry("600x400") # 百度经验，设置窗体大小
 app.mainloop()
