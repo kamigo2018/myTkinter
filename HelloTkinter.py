@@ -18,9 +18,10 @@ class Application(tk.Frame):
         tk.Grid.columnconfigure(self.master,0,weight=1)        
         self.master.grid(row=0,column=0,sticky=tk.N+tk.S+tk.E+tk.W)        
         
-        
-        self.create()
+        self.imageResizeRatio = 100
         self.imageFlag = 0
+        self.create()
+        
         
     
     def create(self):
@@ -131,14 +132,63 @@ class Application(tk.Frame):
                                          command = self.inputClean \
                                         )
 
+        self.imageZoomIn = tk.PhotoImage(file='sources/放大.png')
+        self.inputZoomInButton = tk.Button(self.inputFrame,\
+                                         image = self.imageZoomIn, \
+                                         command = self.zoomIn  )
+
+        self.imageZoomOut = tk.PhotoImage(file='sources/缩小.png')
+        self.inputZoomOutButton = tk.Button(self.inputFrame,\
+                                         image = self.imageZoomOut, \
+                                         command = self.zoomOut  )
+        
         self.inputLabel.grid(row=0,column=0,sticky='NWES')
-        self.inputEntry.grid(row=0,column=1,columnspan=7,sticky='NWES')
-        self.inputSendButton.grid(row = 1,column=6,sticky='NWES')
-        self.inputCleanButton.grid(row = 1,column=4,sticky='NWES')
-        self.inputRefreshButton.grid(row = 1,column=3,sticky='NWES')        
+        self.inputEntry.grid(row=0,column=1,columnspan=10,sticky='NWES')
+        self.inputSendButton.grid(row = 1,column=9,columnspan=2,sticky='NWES')
+        self.inputCleanButton.grid(row = 1,column=7,columnspan=2,sticky='NWES')
+        self.inputRefreshButton.grid(row = 1,column=5,columnspan=2,sticky='NWES')        
+        
+        # 这是初始化，所以永远执行不到这个if分支里面去，有这两句话，是因为写代码时遗留下来，不想删除，所以加了if条件。
+        if self.imageFlag ==1:
+            self.inputZoomInButton.grid(row=1,column=3,sticky='NWES')  
+            self.inputZoomOutButton.grid(row=1,column=4,sticky='NWES')
+        
         self.inputFrame.columnconfigure(2,weight=10)
 
         self.inputFrame.grid(row=1,column=0,sticky=tk.E+tk.W)  
+
+    def zoomIn(self):
+        self.imageResizeRatio += 3
+        
+        #print("此处应该重新设置图像大小，重新绘制图像")
+        winX = self.picCanvas.winfo_width()
+        winY = self.picCanvas.winfo_height()
+        (x,y) = self.image.size
+        newY = int(y*self.imageResizeRatio/100)
+        newX = int(x*self.imageResizeRatio/100)
+        self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
+            
+        self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
+        self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
+        self.imageFlag = 1
+    
+    def zoomOut(self):
+        self.imageResizeRatio -= 3
+        
+        #print("此处应该重新设置图像大小，重新绘制图像")
+        winX = self.picCanvas.winfo_width()
+        winY = self.picCanvas.winfo_height()
+        
+        (x,y) = self.image.size
+        newY = int(y*self.imageResizeRatio/100)
+        newX = int(x*self.imageResizeRatio/100)
+        self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
+            
+        self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
+        self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
+        self.imageFlag = 1
 
     def inputSend(self):
         filePath = self.inputEntry.get()
@@ -157,8 +207,32 @@ class Application(tk.Frame):
         if self.imageFlag == 0:
             return 
         else:
-            print("此处应该重新设置图像大小，重新绘制图像")
-            pass
+            #print("此处应该重新设置图像大小，重新绘制图像")
+            winX = self.picCanvas.winfo_width()
+            winY = self.picCanvas.winfo_height()
+            
+            (x,y) = self.image.size
+            
+            if winX > winY:
+                # 画布的宽大于高，先紧着高，把高度填满
+                newY = winY
+                newX = int(x*winY/y)
+                self.imageResizeRatio = int(winY*100/y)
+            else:
+                # 先把宽填满
+                newX = winX
+                newY = int(y*winX/x)
+                self.imageResizeRatio = int(winX*100/x)
+            
+            self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
+            # 这里为什么不将image重新幅值？因为如果缩小了，再放大，图像就模糊了。
+            # self.image = self.newImage 
+            self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
+            self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+            self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
+            self.imageFlag = 1
+            
+            
 
     def inputClean(self):
         if self.imageFlag == 0:
@@ -167,6 +241,9 @@ class Application(tk.Frame):
             print("清空")
             self.picCanvas.delete(tk.ALL)
             self.imageFlag = 0
+            self.inputZoomInButton.grid_forget()  
+            self.inputZoomOutButton.grid_forget()
+            
         
 
     def showImage(self, filePath):
@@ -189,15 +266,15 @@ class Application(tk.Frame):
             # 应该说的是将image图片的中心点，放在画布的什么位置
             self.picCanvas.create_image(x/2,y/2,image = self.picCanvasImage)
             self.imageFlag = 1
+            
+            self.inputZoomInButton.grid(row=1,column=3,sticky='NWES')  
+            self.inputZoomOutButton.grid(row=1,column=4,sticky='NWES')
         
         except Exception:
             print("异常")
-            return 
-            
-            
-            
-        
-        
+            return
+
+
 #================================================
 #==================== MAIN ======================
 #================================================
