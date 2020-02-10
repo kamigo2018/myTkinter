@@ -169,7 +169,10 @@ class Application(tk.Frame):
         self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
             
         self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
-        self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        #self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        # 将新生成的图像的中心，放在画布的中心，从而确定滚动条的位置：
+        # 需要画个图，用newX，winX表示一下，就能得到下面的关系
+        self.picCanvas ['scrollregion']=( int((winX-newX)/2), int((winY-newY)/2), winX-int((winX-newX)/2) , winY-int((winY-newY)/2))
         self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
         self.imageFlag = 1
     
@@ -181,12 +184,16 @@ class Application(tk.Frame):
         winY = self.picCanvas.winfo_height()
         
         (x,y) = self.image.size
+        
         newY = int(y*self.imageResizeRatio/100)
         newX = int(x*self.imageResizeRatio/100)
         self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
-            
+        
         self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
-        self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        #self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        # 将新生成的图像的中心，放在画布的中心，从而确定滚动条的位置：
+        # 需要画个图，用newX，winX表示一下，就能得到下面的关系
+        self.picCanvas ['scrollregion']=( int((winX-newX)/2), int((winY-newY)/2), winX-int((winX-newX)/2) , winY-int((winY-newY)/2))
         self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
         self.imageFlag = 1
 
@@ -247,6 +254,7 @@ class Application(tk.Frame):
         
 
     def showImage(self, filePath):
+        # 将图像的左上角顶点放在画布的左上角顶点。后续其他显示图片的方法都是将图片的中心点，放在画布的中心点。
         try:            
             # https://jingyan.baidu.com/article/b7001fe1d836310e7282dd00.html
             # 百度经验教我怎么获取画布大小
