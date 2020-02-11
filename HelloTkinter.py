@@ -1,18 +1,25 @@
 import tkinter as tk
 import tkinter.font as tkFont
+import tkinter.filedialog as tkFileDialog
+import tkinter.messagebox as tkMessageBox
+from myUtil import SimpleDialog
+from myUtil import ImageDivider
 from tkinter import ttk
+import os.path
 
 from PIL import ImageTk,Image
 
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+        # root 是个Tk, 根容器，可以添加菜单栏
         self.root = master        
         # https://stackoverflow.com/questions/7591294/how-to-create-a-self-resizing-grid-of-buttons-in-tkinter
         # 这两句是 grid 布局，组件缩放的关键因素：父容器必须要配置这两句，才能实现子容器的缩放。
         tk.Grid.rowconfigure(self.root,0,weight=1)
         tk.Grid.columnconfigure(self.root,0,weight=1)
         
+        # master 是个Frame他不能添加菜单；
         self.master = tk.Frame(self.root)      
         tk.Grid.rowconfigure(self.master,0,weight=1)
         tk.Grid.columnconfigure(self.master,0,weight=1)        
@@ -22,8 +29,7 @@ class Application(tk.Frame):
         self.imageFlag = 0
         self.create()
         
-        
-    
+   
     def create(self):
         '''
         create函数，用来产生相应的应用GUI组件
@@ -33,22 +39,82 @@ class Application(tk.Frame):
         # 定义Master的标题栏
         self.root.title("GUI应用-Tk")
         # 替换应用的图标
-        self.root.iconbitmap("sources/blackEight.ico")
+        self.root.iconbitmap("D:/git_repo/myTkinter/sources/blackEight.ico")
         # 设置窗体最小大小，和最大大小：
         #self.root.maxsize(1200,800)
         #self.root.minsize(300,200)
         
         
         # 创建菜单栏
+        self.createMenu()
         
         # 创建显示文字的text widget 的Frame
         self.createShowResultFrame()
         
         # 创建输入文字的Frame
         self.createInputFrame()
+
+       
+    def createMenu(self):
+        self.menuBar = tk.Menu()
+        self.root.config(menu=self.menuBar)
         
+        # 文件菜单
+        # tearoff,默认为True,这时菜单栏中有一条虚线，点击虚线，可以将菜单弹出。
+        self.fileMenu = tk.Menu(self.menuBar, tearoff=False)
+        self.menuBar.add_cascade(label="文件", menu = self.fileMenu)
+        self.fileMenu.add_command(label="打开",command=self.openImageFile)
+        self.fileMenu.add_separator()
+        self.fileMenu.add_command(label="结束",command = self.root.quit)
+        
+        # 小功能菜单
+        self.functionMenu = tk.Menu(self.menuBar,tearoff=False)
+        self.menuBar.add_cascade(label="功能", menu = self.functionMenu)
+        self.functionMenu.add_command(label="分格",command=self.divideImage)
+        
+        # 帮助菜单
+        self.helpMenu = tk.Menu(self.menuBar,tearoff=False)
+        self.menuBar.add_cascade(label="其他", menu = self.helpMenu)
+        self.helpMenu.add_command(label="说明",command=self.showInfo)
+    
+
+    def showInfo(self):
+        # 调用tkinter.messagebox模块中的显示信息对话框
+        tkMessageBox.showinfo(title="说明",message="hello")
         
 
+    def openImageFile(self):
+        filePath = tkFileDialog.askopenfilename(title="打开文件")
+        if len(filePath)==0:
+            #print("没有输入")
+            return
+        
+        temp = filePath.split('.')        
+        if len(temp)>1 and (temp[-1].lower() in ['jpg','png','jpeg']) :
+            self.showImage(filePath)
+    
+
+    def divideImage(self):
+        if self.imageFlag == 0:
+            tkMessageBox.showinfo(title="提示", \
+                    message="先打开一张图片，再进行分格")
+            return        
+        
+        dialog = SimpleDialog(self.root)
+        self.root.wait_window(dialog.top)
+        rowNumber,columnNubmer = dialog.getInput()
+        rowNumber = int(rowNumber)
+        columnNubmer = int(columnNubmer)
+        imageDivider = ImageDivider()
+        self.newImage = imageDivider.divide(self.image,rowNumber,columnNubmer)
+        # 调用系统工具，查看图片
+        self.newImage.show()
+        if not os.path.exists("tmp"):
+            os.mkdir("tmp")
+        # 这儿其实可以随机生成一个文件名字，为了简单就弄个1.jgp
+        self.newImage.save('tmp\\1.jpg','JPEG')
+       
+       
     def createShowResultFrame(self):
         '''
         创建一个结果展示框，先显示一张图片，这样可以给这个框架占住位置
@@ -92,8 +158,7 @@ class Application(tk.Frame):
 
         self.showResultFrame.grid(row=0,column=0,sticky=tk.N+tk.S+tk.E+tk.W)  
 
-      
-        
+   
     def createInputFrame(self):
         '''
         创建一个输入框，几个按钮
@@ -132,12 +197,12 @@ class Application(tk.Frame):
                                          command = self.inputClean \
                                         )
 
-        self.imageZoomIn = tk.PhotoImage(file='sources/放大.png')
+        self.imageZoomIn = tk.PhotoImage(file='D:/git_repo/myTkinter/sources/放大.png')
         self.inputZoomInButton = tk.Button(self.inputFrame,\
                                          image = self.imageZoomIn, \
                                          command = self.zoomIn  )
 
-        self.imageZoomOut = tk.PhotoImage(file='sources/缩小.png')
+        self.imageZoomOut = tk.PhotoImage(file='D:/git_repo/myTkinter/sources/缩小.png')
         self.inputZoomOutButton = tk.Button(self.inputFrame,\
                                          image = self.imageZoomOut, \
                                          command = self.zoomOut  )
@@ -157,6 +222,7 @@ class Application(tk.Frame):
 
         self.inputFrame.grid(row=1,column=0,sticky=tk.E+tk.W)  
 
+
     def zoomIn(self):
         self.imageResizeRatio += 3
         
@@ -175,7 +241,8 @@ class Application(tk.Frame):
         self.picCanvas ['scrollregion']=( int((winX-newX)/2), int((winY-newY)/2), winX-int((winX-newX)/2) , winY-int((winY-newY)/2))
         self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
         self.imageFlag = 1
-    
+
+
     def zoomOut(self):
         self.imageResizeRatio -= 3
         
@@ -197,10 +264,11 @@ class Application(tk.Frame):
         self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
         self.imageFlag = 1
 
+
     def inputSend(self):
         filePath = self.inputEntry.get()
         if len(filePath)==0:
-            print("没有输入")
+            #print("没有输入")
             return
         
         temp = filePath.split('.')        
@@ -209,7 +277,7 @@ class Application(tk.Frame):
         
         self.inputEntry.delete(0,tk.END)
 
-    
+
     def inputRefresh(self):
         if self.imageFlag == 0:
             return 
@@ -238,20 +306,18 @@ class Application(tk.Frame):
             self.picCanvas ['scrollregion']=(0, 0, newX, newY)
             self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
             self.imageFlag = 1
-            
-            
+
 
     def inputClean(self):
         if self.imageFlag == 0:
             return 
         else:
-            print("清空")
+            #print("清空")
             self.picCanvas.delete(tk.ALL)
             self.imageFlag = 0
             self.inputZoomInButton.grid_forget()  
             self.inputZoomOutButton.grid_forget()
-            
-        
+
 
     def showImage(self, filePath):
         # 将图像的左上角顶点放在画布的左上角顶点。后续其他显示图片的方法都是将图片的中心点，放在画布的中心点。
@@ -277,9 +343,8 @@ class Application(tk.Frame):
             
             self.inputZoomInButton.grid(row=1,column=3,sticky='NWES')  
             self.inputZoomOutButton.grid(row=1,column=4,sticky='NWES')
-        
         except Exception:
-            print("异常")
+            #print("异常")
             return
 
 
@@ -290,3 +355,4 @@ if __name__=="__main__":
     root = tk.Tk()                 # 只能有一个tk.Tk()产生一个。
     app = Application(master=root)
     app.mainloop()
+# 打包遇到的一个问题： https://blog.csdn.net/gdkyxy2013/article/details/103755124
