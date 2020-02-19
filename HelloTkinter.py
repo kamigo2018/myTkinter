@@ -6,9 +6,323 @@ from myUtil import SimpleDialog
 from myUtil import ImageDivider
 from tkinter import ttk
 import os.path
-
 from PIL import ImageTk,Image
 
+class MyImageViewer():
+    def __init__(self,master):
+        # 这里的 master 应该是根应用的tk.Tk()组件。        
+        # 而这个类要产生一个toplevel组件，用来展示一个单独的功能窗体。
+                
+        self.master = master
+        
+        self.top = tk.Toplevel(self.master)
+        
+        tk.Grid.rowconfigure(self.top,0,weight=1)
+        tk.Grid.columnconfigure(self.top,0,weight=1)
+        
+        self.imageResizeRatio = 100
+        self.imageFlag = 0
+        
+        self.create()
+    
+    def create(self):
+        pass
+        # 干什么？显示图片，有菜单栏，有展示窗体，有输入窗体。
+        # 创建菜单栏
+        self.createMenu()
+        
+        # 创建显示文字的text widget 的Frame
+        self.createShowResultFrame()
+        
+        # 创建输入文字的Frame
+        self.createInputFrame()
+        
+    def createMenu(self):
+        self.menuBar = tk.Menu()
+        # menuBar的父窗体就变成了top。
+        self.top.config(menu=self.menuBar)
+        
+        # 文件菜单
+        # tearoff,默认为True,这时菜单栏中有一条虚线，点击虚线，可以将菜单弹出。
+        self.fileMenu = tk.Menu(self.menuBar, tearoff=False)
+        self.menuBar.add_cascade(label="文件", menu = self.fileMenu)
+        self.fileMenu.add_command(label="打开",command=self.openImageFile)
+        self.fileMenu.add_separator()
+        self.fileMenu.add_command(label="结束",command = self.master.quit)
+        
+        # 小功能菜单
+        self.functionMenu = tk.Menu(self.menuBar,tearoff=False)
+        self.menuBar.add_cascade(label="功能", menu = self.functionMenu)
+        self.functionMenu.add_command(label="分格",command=self.divideImage)
+        
+        # 帮助菜单
+        self.helpMenu = tk.Menu(self.menuBar,tearoff=False)
+        self.menuBar.add_cascade(label="其他", menu = self.helpMenu)
+        self.helpMenu.add_command(label="说明",command=self.showInfo)
+    
+
+    def showInfo(self):
+        # 调用tkinter.messagebox模块中的显示信息对话框
+        tkMessageBox.showinfo(title="说明",message="hello")
+        
+
+    def openImageFile(self):
+        filePath = tkFileDialog.askopenfilename(title="打开文件")
+        if len(filePath)==0:
+            #print("没有输入")
+            return
+        
+        temp = filePath.split('.')        
+        if len(temp)>1 and (temp[-1].lower() in ['jpg','png','jpeg']) :
+            self.showImage(filePath)
+    
+
+    def divideImage(self):
+        if self.imageFlag == 0:
+            tkMessageBox.showinfo(title="提示", \
+                    message="先打开一张图片，再进行分格")
+            return        
+        
+        dialog = SimpleDialog(self.top)
+        self.top.wait_window(dialog.top)
+        rowNumber,columnNubmer = dialog.getInput()
+        rowNumber = int(rowNumber)
+        columnNubmer = int(columnNubmer)
+        imageDivider = ImageDivider()
+        self.newImage = imageDivider.divide(self.image,rowNumber,columnNubmer)
+        # 调用系统工具，查看图片
+        self.newImage.show()
+        if not os.path.exists("tmp"):
+            os.mkdir("tmp")
+        # 这儿其实可以随机生成一个文件名字，为了简单就弄个1.jgp
+        self.newImage.save('tmp\\1.jpg','JPEG')
+       
+       
+    def createShowResultFrame(self):
+        '''
+        创建一个结果展示框，先显示一张图片，这样可以给这个框架占住位置
+        '''
+        self.showResultFrame = tk.Frame(self.top) #创建一个Frame，指定他的父容器是我们的top
+        self.showResultFrame.config(borderwidth = 2, relief = 'ridge')
+
+        
+        self.picCanvasHorScrollbar = \
+            tk.Scrollbar(self.showResultFrame, orient=tk.HORIZONTAL)
+        self.picCanvasVerScrollbar = \
+            tk.Scrollbar(self.showResultFrame, orient=tk.VERTICAL)        
+        
+        self.picCanvas = tk.Canvas(self.showResultFrame, \
+                            scrollregion=(0, 0, 1000, 1000), \
+                            yscrollcommand=self.picCanvasVerScrollbar.set, \
+                            xscrollcommand=self.picCanvasHorScrollbar.set )
+                            
+        self.picCanvasHorScrollbar['command'] =  self.picCanvas.xview                  
+        self.picCanvasVerScrollbar['command'] =  self.picCanvas.yview 
+
+        # Bottom-right corner resize widget
+        #self.sizegrip = ttk.Sizegrip(self.showResultFrame)
+        #self.sizegrip.grid(column=1, row=1, sticky=(tk.S,tk.E))
+        
+        self.picCanvas.grid(column=0, row=0, sticky='NWES')
+        self.picCanvasHorScrollbar.grid(column=0, row=1, sticky=(tk.W,tk.E))
+        self.picCanvasVerScrollbar.grid(column=1, row=0, sticky=(tk.N,tk.S))
+        
+        self.showResultFrame.grid_columnconfigure(0, weight=1)
+        self.showResultFrame.grid_rowconfigure(0, weight=1)
+
+        self.showResultFrame.grid(row=0,column=0,sticky=tk.N+tk.S+tk.E+tk.W)  
+
+   
+    def createInputFrame(self):
+        '''
+        创建一个输入框，几个按钮
+        '''
+        self.inputFrameFont = tkFont.Font(family='微软雅黑',size = '16')
+        self.inputFrame = tk.Frame(self.top) 
+        self.inputFrame.config(borderwidth = 4, \
+                               relief = 'ridge' )
+        
+        self.inputLabel = tk.Label(self.inputFrame, \
+                                   font = self.inputFrameFont,\
+                                   text="输入内容:")
+       
+        self.inputEntry = tk.Entry(self.inputFrame,font = self.inputFrameFont)
+        
+        
+        self.inputSendButton = tk.Button(self.inputFrame,\
+                                         font = self.inputFrameFont, \
+                                         width=8,\
+                                         text = "发送", \
+                                         command = self.inputSend \
+                                        )
+        self.inputRefreshButton = tk.Button(self.inputFrame,\
+                                         font = self.inputFrameFont, \
+                                         width=8,\
+                                         fg = 'green',\
+                                         text = "刷新", \
+                                         command = self.inputRefresh \
+                                        )
+        
+        self.inputCleanButton = tk.Button(self.inputFrame,\
+                                         font = self.inputFrameFont, \
+                                         width=8,\
+                                         fg = 'red',\
+                                         text = "清空", \
+                                         command = self.inputClean \
+                                        )
+
+        self.imageZoomIn = tk.PhotoImage(file='D:/git_repo/myTkinter/sources/放大.png')
+        self.inputZoomInButton = tk.Button(self.inputFrame,\
+                                         image = self.imageZoomIn, \
+                                         command = self.zoomIn  )
+
+        self.imageZoomOut = tk.PhotoImage(file='D:/git_repo/myTkinter/sources/缩小.png')
+        self.inputZoomOutButton = tk.Button(self.inputFrame,\
+                                         image = self.imageZoomOut, \
+                                         command = self.zoomOut  )
+        
+        self.inputLabel.grid(row=0,column=0,sticky='NWES')
+        self.inputEntry.grid(row=0,column=1,columnspan=10,sticky='NWES')
+        self.inputSendButton.grid(row = 1,column=9,columnspan=2,sticky='NWES')
+        self.inputCleanButton.grid(row = 1,column=7,columnspan=2,sticky='NWES')
+        self.inputRefreshButton.grid(row = 1,column=5,columnspan=2,sticky='NWES')        
+        
+        # 这是初始化，所以永远执行不到这个if分支里面去，有这两句话，是因为写代码时遗留下来，不想删除，所以加了if条件。
+        if self.imageFlag ==1:
+            self.inputZoomInButton.grid(row=1,column=3,sticky='NWES')  
+            self.inputZoomOutButton.grid(row=1,column=4,sticky='NWES')
+        
+        self.inputFrame.columnconfigure(2,weight=10)
+
+        self.inputFrame.grid(row=1,column=0,sticky=tk.E+tk.W)  
+
+
+    def zoomIn(self):
+        self.imageResizeRatio += 3
+        
+        #print("此处应该重新设置图像大小，重新绘制图像")
+        winX = self.picCanvas.winfo_width()
+        winY = self.picCanvas.winfo_height()
+        (x,y) = self.image.size
+        newY = int(y*self.imageResizeRatio/100)
+        newX = int(x*self.imageResizeRatio/100)
+        self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
+            
+        self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
+        #self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        # 将新生成的图像的中心，放在画布的中心，从而确定滚动条的位置：
+        # 需要画个图，用newX，winX表示一下，就能得到下面的关系
+        self.picCanvas ['scrollregion']=( int((winX-newX)/2), int((winY-newY)/2), winX-int((winX-newX)/2) , winY-int((winY-newY)/2))
+        self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
+        self.imageFlag = 1
+
+
+    def zoomOut(self):
+        self.imageResizeRatio -= 3
+        
+        #print("此处应该重新设置图像大小，重新绘制图像")
+        winX = self.picCanvas.winfo_width()
+        winY = self.picCanvas.winfo_height()
+        
+        (x,y) = self.image.size
+        
+        newY = int(y*self.imageResizeRatio/100)
+        newX = int(x*self.imageResizeRatio/100)
+        self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
+        
+        self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
+        #self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+        # 将新生成的图像的中心，放在画布的中心，从而确定滚动条的位置：
+        # 需要画个图，用newX，winX表示一下，就能得到下面的关系
+        self.picCanvas ['scrollregion']=( int((winX-newX)/2), int((winY-newY)/2), winX-int((winX-newX)/2) , winY-int((winY-newY)/2))
+        self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
+        self.imageFlag = 1
+
+
+    def inputSend(self):
+        filePath = self.inputEntry.get()
+        if len(filePath)==0:
+            #print("没有输入")
+            return
+        
+        temp = filePath.split('.')        
+        if len(temp)>1 and (temp[-1].lower() in ['jpg','png','jpeg']) :
+            self.showImage(filePath)
+        
+        self.inputEntry.delete(0,tk.END)
+
+
+    def inputRefresh(self):
+        if self.imageFlag == 0:
+            return 
+        else:
+            #print("此处应该重新设置图像大小，重新绘制图像")
+            winX = self.picCanvas.winfo_width()
+            winY = self.picCanvas.winfo_height()
+            
+            (x,y) = self.image.size
+            
+            if winX > winY:
+                # 画布的宽大于高，先紧着高，把高度填满
+                newY = winY
+                newX = int(x*winY/y)
+                self.imageResizeRatio = int(winY*100/y)
+            else:
+                # 先把宽填满
+                newX = winX
+                newY = int(y*winX/x)
+                self.imageResizeRatio = int(winX*100/x)
+            
+            self.newImage = self.image.resize((newX,newY), Image.ANTIALIAS)
+            # 这里为什么不将image重新幅值？因为如果缩小了，再放大，图像就模糊了。
+            # self.image = self.newImage 
+            self.picCanvasImage = ImageTk.PhotoImage(self.newImage)
+            self.picCanvas ['scrollregion']=(0, 0, newX, newY)
+            self.picCanvas.create_image(winX/2,winY/2,image = self.picCanvasImage)
+            self.imageFlag = 1
+
+
+    def inputClean(self):
+        if self.imageFlag == 0:
+            return 
+        else:
+            #print("清空")
+            self.picCanvas.delete(tk.ALL)
+            self.imageFlag = 0
+            self.inputZoomInButton.grid_forget()  
+            self.inputZoomOutButton.grid_forget()
+
+
+    def showImage(self, filePath):
+        # 将图像的左上角顶点放在画布的左上角顶点。后续其他显示图片的方法都是将图片的中心点，放在画布的中心点。
+        try:            
+            # https://jingyan.baidu.com/article/b7001fe1d836310e7282dd00.html
+            # 百度经验教我怎么获取画布大小
+            #x = self.picCanvas.winfo_width()            
+            #y = self.picCanvas.winfo_height()
+            #print("画布大小为：",(x,y))            
+            #self.image = self.origImage.resize((int(x*95/100),int(y*95/100)),Image.ANTIALIAS)
+            
+            self.image = Image.open(filePath)
+            (x,y) = self.image.size            
+            self.picCanvasImage = ImageTk.PhotoImage(self.image)
+            #print("图像大小为：",(x,y))
+            
+            self.picCanvas ['scrollregion']=(0, 0, x, y)            
+            
+            # 这个create_image的前两个参数，图片的位置（position）：
+            # 应该说的是将image图片的中心点，放在画布的什么位置
+            self.picCanvas.create_image(x/2,y/2,image = self.picCanvasImage)
+            self.imageFlag = 1
+            
+            self.inputZoomInButton.grid(row=1,column=3,sticky='NWES')  
+            self.inputZoomOutButton.grid(row=1,column=4,sticky='NWES')
+        except Exception:
+            #print("异常")
+            return
+        
+
+# 一旦有了 MyImageViewer，这里的 Application 就变成了一个例子。
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
