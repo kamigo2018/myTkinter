@@ -48,7 +48,7 @@ class MyImageViewer():
         self.menuBar.add_cascade(label="文件", menu = self.fileMenu)
         self.fileMenu.add_command(label="打开",command=self.openImageFile)
         self.fileMenu.add_separator()
-        self.fileMenu.add_command(label="结束",command = self.master.quit)
+        self.fileMenu.add_command(label="结束",command = self.top.destroy)
         
         # 小功能菜单
         self.functionMenu = tk.Menu(self.menuBar,tearoff=False)

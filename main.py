@@ -4,7 +4,8 @@ import tkinter.font as tkFont
 from tkinter import ttk
 
 from HelloTkinter import MyImageViewer
-
+from HelloSocket import MyUDPViewer
+from HelloSocket import MyTCPViewer
 
 class Application(tk.Frame):
     def __init__(self,master = None):
@@ -108,8 +109,25 @@ class Application(tk.Frame):
         self.root.geometry(("{}x{}+{}+{}").format(winWidth,winHeight,screenX,screenY))
         
     def func2(self):
-        pass
+        # 主窗体的宽高尺寸
+        winWidth = self.root.winfo_width()
+        winHeight = self.root.winfo_height()
+        
+        # 主窗体在屏幕的位置
+        screenX = self.root.winfo_x()
+        screenY = self.root.winfo_y()
+        
+        self.root.withdraw()        
+        
+        myUDPViewer = MyUDPViewer(self.root)
+        self.root.wait_window(myUDPViewer.top)
+        
+        self.root.deiconify()
+        self.root.update()        
+        self.root.geometry(("{}x{}+{}+{}").format(winWidth,winHeight,screenX,screenY))
+        
         #print("UDP")
+        #https://www.studytonight.com/network-programming-in-python/networking-terminologies
    
     def func3(self):
         pass

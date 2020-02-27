@@ -1,6 +1,35 @@
 import tkinter as tk
 import tkinter.font as tkFont
 from PIL import Image
+import datetime
+import random
+
+
+class StrUtil():
+    def __init__(self):
+        pass
+    
+    @staticmethod
+    def getDateStr():
+        return str(datetime.datetime.now().date())
+    
+    @staticmethod
+    def getTimeStr():
+        return str(datetime.datetime.now())
+
+
+class RandUtil():
+    def __init__(self):
+        pass
+    @staticmethod
+    def getRandWords():
+        result = []
+        len = random.randint(10,21)
+        for i in range(len):
+            c = random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890')
+            result.append(c)
+        return ''.join(result)
+        
 
 # 参考 http://effbot.org/tkinterbook/tkinter-dialog-windows.htm
 # 参考 https://www.cnblogs.com/hhh5460/p/6664021.html?utm_source=itdadao&utm_medium=referral
