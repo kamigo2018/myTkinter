@@ -120,7 +120,8 @@ class Application(tk.Frame):
         self.root.withdraw()        
         
         myUDPViewer = MyUDPViewer(self.root)
-        self.root.wait_window(myUDPViewer.top)
+        self.root.wait_window(myUDPViewer)
+        #self.root.wait_window(myUDPViewer.top)
         
         self.root.deiconify()
         self.root.update()        

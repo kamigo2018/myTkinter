@@ -4,6 +4,26 @@ from PIL import Image
 import datetime
 import random
 
+class ConfigUtil():
+    def __init__(self):
+        pass
+    
+    # 没有默认用户会犯错，也没有默认系统会犯错
+    @staticmethod
+    def getWholeConfig(configFileName):
+        config = {}
+        with open(configFileName,'r', encoding='utf-8') as f:
+            while True:
+                strLine = f.readline()
+                if not strLine:
+                    break
+                if strLine.startswith('#'):
+                    continue
+                tempList = []
+                tempList = strLine.split('=')                
+                if len(tempList) == 2:
+                    config[tempList[0].strip()] = tempList[1].strip()       
+        return config
 
 class StrUtil():
     def __init__(self):

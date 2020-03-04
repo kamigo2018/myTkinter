@@ -6,6 +6,7 @@ from myUtil import SimpleDialog
 from myUtil import ImageDivider
 from myUtil import StrUtil
 from myUtil import RandUtil
+from myUtil import ConfigUtil
 from tkinter import ttk
 import os.path
 import socket
@@ -17,18 +18,24 @@ import threading
 
 # 遗留一个问题：如何在程序退出时，关闭socket？
 
-class MyUDPViewer():
+class MyUDPViewer(tk.Toplevel):
     def __init__(self,master):
         # 这个init就是我以后的套路，
         # 产生一个toplevel组件，用来展示一个单独的功能窗体。
         # 调用create()，组织窗体内部的组件
-        self.master = master        
-        self.top = tk.Toplevel(self.master)
+        
+        super(MyUDPViewer,self).__init__(master)
+
+        #self.master = master        
+        #self.top = tk.Toplevel(self.master)
+        self.top = self
         self.top.title("UDP 演示程序")
         tk.Grid.rowconfigure(self.top,0,weight=1)
         tk.Grid.columnconfigure(self.top,0,weight=1)        
         
         self.ServerRunningFlag = False
+        # 服务端socket
+        self.ServerUDPSocket = None
         
         # 客户端需要用到的变量
         self.ClientInitalFlag = False
@@ -37,6 +44,25 @@ class MyUDPViewer():
         
         # 每个窗体自己定义create
         self.create()
+        
+    # 为了解决忘记按stop按键时，子线程还在不停运行的问题，
+    # 将这个类继承toplevel类，使他可以重载destroy函数。
+    # 在toplevel窗口关闭时，可以关闭子线程。释放端口。
+    def destroy(self):        
+        # Todo：我没明白一件事，为什么设置了这个标志，线程就会直接退出，
+        # 线程不应该在等待输入字符串么？
+        self.ServerRunningFlag = False
+        
+        if self.ServerUDPSocket:
+            self.ServerUDPSocket.close()
+        
+        if self.ClientUDPSocket:
+            self.ClientUDPSocket.close()
+            
+        super(MyUDPViewer,self).destroy()        
+        
+    def __del__(self):
+        pass
     
     def create(self):
         # 创建菜单栏
@@ -133,7 +159,9 @@ class MyUDPViewer():
             return None
         
         self.ServerRunningFlag = True        
-        threading.Thread(target=self.taskRun,args=()).start()
+        self.UDPServerThread = threading.Thread(target=self.taskRun,args=())
+        self.UDPServerThread.start()        
+        
         self.serRunButton.config(state='disabled')
         
     def taskRun(self):
@@ -160,18 +188,38 @@ class MyUDPViewer():
         # 释放掉服务端socket
         # 恢复Run按钮        
         #self.serIPInputEntry.delete(0,tk.END)
-        #self.serPortInputEntry.delete(0,tk.END)
+        #self.serPortInputEntry.delete(0,tk.END)‘
+        if self.ServerRunningFlag == False:
+            return
         self.__txtAreaOutput("=== Finish at {} ===\n".format(StrUtil.getTimeStr()))  
         self.ServerRunningFlag = False
+        
         self.serRunButton.config(state='normal')
         if self.ServerUDPSocket:
             self.ServerUDPSocket.close()
     
     def serverLoad(self):
-        # Todo:这里应该是从文件载入服务器配置
-        self.serIPInputEntry.insert(0,'192.168.0.112')
-        self.serPortInputEntry.insert(0,'2000')
-        pass
+        # 设置默认值，我的机器的IP是112。
+        ipAddr = "192.168.0.112"
+        port = "2000"
+        self.serIPInputEntry.delete(0,tk.END)
+        self.serPortInputEntry.delete(0,tk.END)
+        
+        # 这里开始了，打开配置文件，读取整个配置，获取IP和端口，检查ip和端口。
+        myConfig = ConfigUtil.getWholeConfig('./UDP_example.cfg')
+        ipAddr = myConfig['UDP_SERVER_IP']
+        port = myConfig['UDP_SERVER_PORT']
+        if self.__isCorrectIPStr(ipAddr) == False:
+            print('IP地址格式错误。\n{}'.format(ipAddr))
+            tkMessageBox.showerror(title="错误",message='IP地址格式错误。\n{}'.format(ipAddr))
+            return None
+        if self.__isCorrentPort(port) == False:
+            print('端口格式错误。\n{}'.format(port))
+            tkMessageBox.showerror(title="错误",message='端口格式错误。\n{}'.format(port))
+            return None   
+        self.serIPInputEntry.insert(0,ipAddr)
+        self.serPortInputEntry.insert(0,port)
+        
 
 
     def __createServerUDPSocket(self, ipStr,portStr):
