@@ -12,7 +12,7 @@ class Application(tk.Frame):
         super().__init__(master)
         
         root = self.root = master
-        root.iconbitmap("D:/git_repo/myTkinter/sources/blackEight.ico")
+        root.iconbitmap("./sources/blackEight.ico")
         root.title("GUI应用-Tk")
         root.geometry( '200x460')
         root.resizable(0,1)
