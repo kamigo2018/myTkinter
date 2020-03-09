@@ -8,7 +8,7 @@ from tkinter import ttk
 import os.path
 from PIL import ImageTk,Image
 
-class MyImageViewer():
+class MyImageView():
     def __init__(self,master):
         # 这里的 master 应该是根应用的tk.Tk()组件。        
         # 而这个类要产生一个toplevel组件，用来展示一个单独的功能窗体。
@@ -322,7 +322,7 @@ class MyImageViewer():
             return
         
 
-# 一旦有了 MyImageViewer，这里的 Application 就变成了一个例子。
+# 一旦有了 MyImageView，这里的 Application 就变成了一个例子。
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)

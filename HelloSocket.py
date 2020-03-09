@@ -18,13 +18,13 @@ import threading
 
 # 遗留一个问题：如何在程序退出时，关闭socket？
 
-class MyUDPViewer(tk.Toplevel):
+class MyUDPView(tk.Toplevel):
     def __init__(self,master):
         # 这个init就是我以后的套路，
         # 产生一个toplevel组件，用来展示一个单独的功能窗体。
         # 调用create()，组织窗体内部的组件
         
-        super(MyUDPViewer,self).__init__(master)
+        super(MyUDPView,self).__init__(master)
 
         #self.master = master        
         #self.top = tk.Toplevel(self.master)
@@ -59,7 +59,7 @@ class MyUDPViewer(tk.Toplevel):
         if self.ClientUDPSocket:
             self.ClientUDPSocket.close()
             
-        super(MyUDPViewer,self).destroy()        
+        super(MyUDPView,self).destroy()        
         
     def __del__(self):
         pass
@@ -395,7 +395,7 @@ class MyUDPViewer(tk.Toplevel):
         
         
         
-class MyTCPViewer():
+class MyTCPView():
     def __init__(self,master):
         # 这个init就是我以后的套路，
         # 产生一个toplevel组件，用来展示一个单独的功能窗体。

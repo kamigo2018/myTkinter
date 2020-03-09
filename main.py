@@ -3,9 +3,11 @@ import tkinter as tk
 import tkinter.font as tkFont
 from tkinter import ttk
 
-from HelloTkinter import MyImageViewer
-from HelloSocket import MyUDPViewer
-from HelloSocket import MyTCPViewer
+from HelloTkinter import MyImageView
+from HelloSocket  import MyUDPView
+from HelloSocket  import MyTCPView
+from HelloNothing import MyNothingView
+from HelloQRCode  import MyQRCodeView
 
 class Application(tk.Frame):
     def __init__(self,master = None):
@@ -51,18 +53,21 @@ class Application(tk.Frame):
         self.button2 = tk.Button(self.funcFrame,text='UDP程序',font=self.frameFont, command = self.func2)
         self.button3 = tk.Button(self.funcFrame,text='TCP程序',font=self.frameFont, command = self.func3)
         self.button4 = tk.Button(self.funcFrame,text='还没想好',font=self.frameFont, command = self.func4)
+        self.button5 = tk.Button(self.funcFrame,text='二维码程序',font=self.frameFont, command = self.func5)
         
         # ==start==
-        # 设置以上4个按键的位置
+        # 设置以上5个按键的位置
         self.button1.grid(row=0,column=0,rowspan=1,sticky='NWES')
         self.button2.grid(row=1,column=0,rowspan=1,sticky='NWES')
         self.button3.grid(row=2,column=0,rowspan=1,sticky='NWES')
         self.button4.grid(row=3,column=0,rowspan=1,sticky='NWES')
+        self.button5.grid(row=4,column=0,rowspan=1,sticky='NWES')
         
         tk.Grid.rowconfigure(self.funcFrame,0,weight=1)
         tk.Grid.rowconfigure(self.funcFrame,1,weight=1)
         tk.Grid.rowconfigure(self.funcFrame,2,weight=1)
         tk.Grid.rowconfigure(self.funcFrame,3,weight=1)
+        tk.Grid.rowconfigure(self.funcFrame,4,weight=1)
         
         tk.Grid.columnconfigure(self.funcFrame,0,weight=1)
         # ==end==
@@ -101,8 +106,8 @@ class Application(tk.Frame):
         
         self.root.withdraw()        
         
-        myImageViewer = MyImageViewer(self.root)
-        self.root.wait_window(myImageViewer.top)
+        myImageView = MyImageView(self.root)
+        self.root.wait_window(myImageView.top)
         
         self.root.deiconify()
         self.root.update()        
@@ -119,9 +124,9 @@ class Application(tk.Frame):
         
         self.root.withdraw()        
         
-        myUDPViewer = MyUDPViewer(self.root)
-        self.root.wait_window(myUDPViewer)
-        #self.root.wait_window(myUDPViewer.top)
+        myUDPView = MyUDPView(self.root)
+        self.root.wait_window(myUDPView)
+        #self.root.wait_window(myUDPView.top)
         
         self.root.deiconify()
         self.root.update()        
@@ -135,19 +140,43 @@ class Application(tk.Frame):
         #print("TCP")
         
     def func4(self):        
-        # 使用withdraw和update，deiconify是一种隐藏主窗口的方法
-        # 能不能在toplevel的创建和结束时调用隐藏主窗口？
-        #
-        self.root.withdraw()
+        # 主窗体的宽高尺寸
+        winWidth = self.root.winfo_width()
+        winHeight = self.root.winfo_height()
         
-        #assistantJarvis = Jarvis(self.root)
-        #self.root.wait_window(assistantJarvis.top)
+        # 主窗体在屏幕的位置
+        screenX = self.root.winfo_x()
+        screenY = self.root.winfo_y()
         
-        #self.root.wait_window(MyImageViewer(self.root).top)
+        self.root.withdraw()        
         
-        #self.root.update()
+        myNothingView = MyNothingView(self.root)
+        self.root.wait_window(myNothingView)
+        
         self.root.deiconify()
+        self.root.update()        
+        self.root.geometry(("{}x{}+{}+{}").format(winWidth,winHeight,screenX,screenY))
+    
+    def func5(self):        
+        # 主窗体的宽高尺寸
+        winWidth = self.root.winfo_width()
+        winHeight = self.root.winfo_height()
         
+        # 主窗体在屏幕的位置
+        screenX = self.root.winfo_x()
+        screenY = self.root.winfo_y()
+        
+        self.root.withdraw()        
+        
+        myQRCodeView = MyQRCodeView(self.root)
+        self.root.wait_window(myQRCodeView)
+        
+        self.root.deiconify()
+        self.root.update()        
+        self.root.geometry(("{}x{}+{}+{}").format(winWidth,winHeight,screenX,screenY))
+        
+    
+    
 '''
 1, 是否需要加上logging？
 2，多文件处理。
