@@ -2,8 +2,12 @@ import tkinter as tk
 import tkinter.font as tkFont
 import tkinter.filedialog as tkFileDialog
 import tkinter.messagebox as tkMessageBox
+from PIL import ImageTk,Image
+import tkinter.filedialog
 
 from myUtil import StrUtil
+from CommonFrame import MyShowOneImageFrame
+from CommonFrame import MyInputStringFrame
 
 import qrcode
 
@@ -35,14 +39,15 @@ class MyQRCodeView(tk.Toplevel):
         pass
 
     def create(self):
-        # 创建菜单栏
-        self.createMenu()
-        
         # 一个A Frame
-        #self.createAXXFrame()
+        self.createShowQRCodeImageFrame()
         
         # 一个B Frame
-        #self.createBXXFrame()
+        self.createCreateQRCodeFrame()
+        
+        # 创建菜单栏，
+        # 为了在工具栏中调用子框架的功能，所以等生成子框架后才创建菜单栏
+        self.createMenu()
     
     
     def createMenu(self):
@@ -53,9 +58,20 @@ class MyQRCodeView(tk.Toplevel):
         # 文件菜单
         # tearoff,默认为True,这时菜单栏中有一条虚线，点击虚线，可以将菜单弹出。
         self.fileMenu = tk.Menu(self.menuBar, tearoff=False)
-        self.menuBar.add_cascade(label="文件", menu = self.fileMenu)        
+        self.menuBar.add_cascade(label="文件", menu = self.fileMenu)
+        self.fileMenu.add_command(label="打开图片",command = self.openImage)  
+        self.fileMenu.add_command(label="图片另存为",command = self.saveAs)        
         self.fileMenu.add_separator()
         self.fileMenu.add_command(label="结束",command = self.top.destroy)        
+
+        # 操作菜单
+        self.operationMenu = tk.Menu(self.menuBar, tearoff=False)
+        self.menuBar.add_cascade(label="操作", menu = self.operationMenu)
+        self.operationMenu.add_command(label="适应画布",command = self.myQRCodeImageViewFrame.refresh)
+        self.operationMenu.add_separator()
+        self.operationMenu.add_command(label="清空画布",command = self.clean)
+       
+        
         
         # 帮助菜单
         self.helpMenu = tk.Menu(self.menuBar,tearoff=False)
@@ -67,5 +83,63 @@ class MyQRCodeView(tk.Toplevel):
         # 调用tkinter.messagebox模块中的显示信息对话框
         # To change:这里的message要修改
         tkMessageBox.showinfo(title="说明",message="Hello QRCod! 2020-03-09")
-        
     
+    def createShowQRCodeImageFrame(self):
+        # 这个和功能一，展示图片中的窗体功能一致，所以尽可能拷贝。
+        ## Todo：这里发现，第一次写的展示图片的功能有可能复用，
+        ##      所以考虑将这个功能优化，或者独立出来。应该会节省以后的工作
+        ## 这块的功能是：
+        ##  1、一个Frame，嵌入一个canvas，用来展示图片。
+        ##  2、Frame带有滚动条，如果图片大小超出canvas的大小，可以通过滚动条查看图片；
+        ##  3、最好带有放大，缩小，适应canvas大小，复位的功能键。这些功能键在没有图片时，可隐藏。
+        ##  4、可以传入文件名，或者Image对象，触发展示图片；
+        ##一个疑问，这个Frame怎么其他组件进行交互？
+        
+        # 这里要一个能够展示二维码图像的框体
+        self.myQRCodeImageViewFrame = MyShowOneImageFrame(self.top)
+        self.myQRCodeImageViewFrame.setGrid(0,0) # 将这个Frame设置在0行，0列
+        pass
+
+    def createCreateQRCodeFrame(self):
+        self.myQRCodeInputViewFrame = MyInputStringFrame(self.top)
+        self.myQRCodeInputViewFrame.setGrid(0,1)
+    
+    def subFrameCallHandler(self,messageInfo,strInfo):
+        if messageInfo == 'NEW_QRCODE': # 子框架中有事情要告诉父框架。这里是子框架产生了二维码。
+            # print("输入字符[{}]".format(data))  #这个data会自带一个换行符"\n"
+            data = strInfo[:-1]
+            if len(data) == 0:
+                tkMessageBox.showinfo(title="说明",message="无输入字符，不生成二维码")
+                return
+            else:
+                tempFile = qrcode.make(data)
+                tempFile.save('tmp/qrcode.jpg')
+
+            image = Image.open('tmp/qrcode.jpg')
+            self.myQRCodeImageViewFrame.showImage(image)
+    
+    def openImage(self):
+        fileName = tkinter.filedialog.askopenfilename(defaultextension=".*",\
+            filetypes=[('jpg', '.jpg'), ('png', '.png'),('jpeg','jpeg'),('all files', '.*')])
+        tempList = fileName.split(".")
+        if tempList[-1].lower() in ['jpg','png','jpeg']:
+            image = Image.open(fileName)
+            self.myQRCodeImageViewFrame.showImage(image)
+        else:
+            tkMessageBox.showinfo(title="提示",message="只能打开图片文件，无法打开其他文件")
+    
+    def saveAs(self):
+        if self.myQRCodeImageViewFrame.imageFlag == 1:
+            image = self.myQRCodeImageViewFrame.image
+            # 弹出对话框，选择保存的文件，文件名
+            # http://codingdict.com/sources/py/tkinter.filedialog/13817.html
+            newFileName = tkinter.filedialog.asksaveasfilename(defaultextension=".jpg",\
+            filetypes=[('image files', '.jpg'), ('all files', '.*')])            
+            # 保存文件
+            image.save(newFileName) 
+        else:
+            print("没有图片需要保存")
+    
+    def clean(self):
+        self.myQRCodeImageViewFrame.clean()
+        
