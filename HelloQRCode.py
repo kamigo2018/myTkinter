@@ -10,6 +10,7 @@ from CommonFrame import MyShowOneImageFrame
 from CommonFrame import MyInputStringFrame
 
 import qrcode
+import cv2
 
 # 参考https://blog.csdn.net/weixin_42703239/article/details/104349417
 
@@ -69,9 +70,9 @@ class MyQRCodeView(tk.Toplevel):
         self.menuBar.add_cascade(label="操作", menu = self.operationMenu)
         self.operationMenu.add_command(label="适应画布",command = self.myQRCodeImageViewFrame.refresh)
         self.operationMenu.add_separator()
-        self.operationMenu.add_command(label="清空画布",command = self.clean)
-       
-        
+        self.operationMenu.add_command(label="清空画布",command = self.clean)   
+        self.operationMenu.add_separator()
+        self.operationMenu.add_command(label="识别二维码",command = self.decode)
         
         # 帮助菜单
         self.helpMenu = tk.Menu(self.menuBar,tearoff=False)
@@ -142,4 +143,42 @@ class MyQRCodeView(tk.Toplevel):
     
     def clean(self):
         self.myQRCodeImageViewFrame.clean()
+    
+    def decode(self):
+    '''
+    识别二维码有多重方式，
+    https://stackoverflow.com/questions/27233351/how-to-decode-a-qr-code-image-in-preferably-pure-python
+    我学习的是下面这个：
+    https://www.thepythoncode.com/article/generate-read-qr-code-python
+    '''
+        if self.myQRCodeImageViewFrame.imageFlag == 1:
+            fileName  = "tmp/decode.jpg" 
+            image = self.myQRCodeImageViewFrame.image
+            image.save(fileName) # 先把他存成临时文件，给cv2用
+            
+            # cv2读入图片数据
+            img = cv2.imread(fileName)
+            
+            # 初始化一个二维码解码器
+            detector = cv2.QRCodeDetector()
+            
+            # 识别二维码
+            data, bbox, straight_qrcode = detector.detectAndDecode(img)
+            
+            # 如果有二维码，将二维码区域识别画出来
+            if bbox is not None:
+                self.myQRCodeInputViewFrame.txtArea.insert(0.0,data)
+                n_lines = len(bbox)
+                for i in range(n_lines):
+                    # draw all lines
+                    point1 = tuple(bbox[i][0])
+                    point2 = tuple(bbox[(i+1) % n_lines][0])
+                    # bbox 是这个二维码的四个顶点，用红线将二维码框起来。
+                    
+                    cv2.line(img, point1, point2, color=(0, 0, 255), thickness=5)
+                    cv2.imwrite(fileName,img)
+                    image = Image.open(fileName)
+                    self.myQRCodeImageViewFrame.showImage(image)
+            else:
+                tkMessageBox.showinfo(title="提示",message="未识别到二维码")
         
