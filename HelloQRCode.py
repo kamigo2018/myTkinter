@@ -145,12 +145,12 @@ class MyQRCodeView(tk.Toplevel):
         self.myQRCodeImageViewFrame.clean()
     
     def decode(self):
-    '''
-    识别二维码有多重方式，
-    https://stackoverflow.com/questions/27233351/how-to-decode-a-qr-code-image-in-preferably-pure-python
-    我学习的是下面这个：
-    https://www.thepythoncode.com/article/generate-read-qr-code-python
-    '''
+        '''
+        识别二维码有多重方式，
+        https://stackoverflow.com/questions/27233351/how-to-decode-a-qr-code-image-in-preferably-pure-python
+        我学习的是下面这个：
+        https://www.thepythoncode.com/article/generate-read-qr-code-python
+        '''
         if self.myQRCodeImageViewFrame.imageFlag == 1:
             fileName  = "tmp/decode.jpg" 
             image = self.myQRCodeImageViewFrame.image
